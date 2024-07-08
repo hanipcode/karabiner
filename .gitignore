@@ -1,1 +1,4 @@
 node_modules
+automatic_backups
+
+package-lock.json

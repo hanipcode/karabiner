@@ -1,8 +1,34 @@
 import fs from "fs";
 import { KarabinerRules } from "./types";
 import { createHyperSubLayers, app, open, rectangle, shell } from "./utils";
+import { deepmerge as merge } from "deepmerge-ts";
 
 const rules: KarabinerRules[] = [
+  {
+    description: "Use ctrl with backtick",
+    manipulators: [
+      {
+        description: "to ctrl",
+        from: {
+          key_code: "grave_accent_and_tilde",
+          modifiers: {
+            optional: ["any"],
+          },
+        },
+        to: [
+          {
+            key_code: "left_control",
+          },
+        ],
+        to_if_alone: [
+          {
+            key_code: "grave_accent_and_tilde",
+          },
+        ],
+        type: "basic",
+      },
+    ],
+  },
   // Define the Hyper key itself
   {
     description: "Hyper Key (⌃⌥⇧⌘)",
@@ -56,14 +82,25 @@ const rules: KarabinerRules[] = [
     ],
   },
   ...createHyperSubLayers({
+    // task related
+    t: {
+      // pomodoro
+      p: open("raycast://extensions/asubbotin/pomodoro/pomodoro-control-timer"),
+    },
+    // open
     o: {
       c: app("Google Chrome"),
       t: app("iTerm"),
       b: app("Obsidian"),
       s: app("Slack"),
+      l: app("Mail"),
     },
+    // window management
     w: {
       l: rectangle("left-half"),
+      k: rectangle("first-two-thirds"),
+      e: rectangle("last-two-thirds"),
+      t: rectangle("last-third"),
       r: rectangle("right-half"),
       m: rectangle("maximize"),
       c: rectangle("center"),
@@ -119,23 +156,33 @@ const rules: KarabinerRules[] = [
   },
 ];
 
+const currentProfileAndRule = JSON.parse(
+  fs.readFileSync("karabiner.json", "utf8")
+);
+currentProfileAndRule.profiles[0].complex_modifications.rules = rules;
+console.log(currentProfileAndRule);
 fs.writeFileSync(
   "karabiner.json",
-  JSON.stringify(
-    {
-      global: {
-        show_in_menu_bar: false,
-      },
-      profiles: [
-        {
-          name: "Default",
-          complex_modifications: {
-            rules,
-          },
-        },
-      ],
-    },
-    null,
-    2
-  )
+  JSON.stringify(currentProfileAndRule, null, 2)
 );
+//
+// fs.writeFileSync(
+//   "karabiner.json",
+//   JSON.stringify(
+//     merge(currentProfileAndRule, {
+//       global: {
+//         show_in_menu_bar: false,
+//       },
+//       profiles: [
+//         {
+//           name: "Default",
+//           complex_modifications: {
+//             rules,
+//           },
+//         },
+//       ],
+//     }),
+//     null,
+//     2
+//   )
+// );

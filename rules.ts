@@ -4,63 +4,13 @@ import {
   createHyperSubLayers,
   app,
   open,
-  rectangle,
-  shell,
   createTabSubLayers,
-  resetTabOnKeys,
+  toCtrl,
+  toAlt,
+  toKeyCode,
 } from "./utils";
 
 const rules: KarabinerRules[] = [
-  {
-    description: "Use ctrl with backtick",
-    manipulators: [
-      {
-        description: "to ctrl",
-        from: {
-          key_code: "grave_accent_and_tilde",
-          modifiers: {
-            optional: ["any"],
-          },
-        },
-        to: [
-          {
-            key_code: "left_control",
-          },
-        ],
-        to_if_alone: [
-          {
-            key_code: "grave_accent_and_tilde",
-          },
-        ],
-        type: "basic",
-      },
-    ],
-  },
-  {
-    description: "Use ctrl with backslash",
-    manipulators: [
-      {
-        description: "to ctrl",
-        from: {
-          key_code: "backslash",
-          modifiers: {
-            optional: ["any"],
-          },
-        },
-        to: [
-          {
-            key_code: "left_control",
-          },
-        ],
-        to_if_alone: [
-          {
-            key_code: "backslash",
-          },
-        ],
-        type: "basic",
-      },
-    ],
-  },
   {
     description: "Tab Layering",
     manipulators: [
@@ -97,48 +47,20 @@ const rules: KarabinerRules[] = [
       },
     ],
   },
+
   ...createTabSubLayers({
-    ...resetTabOnKeys([
-      "left_command",
-      "left_control",
-      "right_command",
-      "right_control",
-    ]),
-    h: {
-      to: [
-        {
-          key_code: "left_arrow",
-        },
-      ],
-    },
-    j: {
-      to: [
-        {
-          key_code: "down_arrow",
-        },
-      ],
-    },
-    k: {
-      to: [
-        {
-          key_code: "up_arrow",
-        },
-      ],
-    },
-    l: {
-      to: [
-        {
-          key_code: "right_arrow",
-        },
-      ],
-    },
-    q: {
-      to: [
-        {
-          key_code: "left_control",
-        },
-      ],
-    },
+    // use tab as helper for common shift + [0-9] keys
+    // very useful to reduce strain pressing shift with htose keys
+    "1": toKeyCode("1", true),
+    "2": toKeyCode("2", true),
+    "3": toKeyCode("3", true),
+    "4": toKeyCode("4", true),
+    "5": toKeyCode("5", true),
+    // use tab as arrow
+    h: toKeyCode("left_arrow"),
+    j: toKeyCode("down_arrow"),
+    k: toKeyCode("up_arrow"),
+    l: toKeyCode("right_arrow"),
   }),
 
   // Define the Hyper key itself
@@ -179,70 +101,124 @@ const rules: KarabinerRules[] = [
     ],
   },
   ...createHyperSubLayers({
-    // task related
+    // tmux change mode, so important
+    a: toCtrl("a"),
+    // convenience right hand
+    p: {
+      w: toAlt("period", true),
+    },
+    // aerospace move focus
+    h: toAlt("h"),
+    j: toAlt("j"),
+    k: toAlt("k"),
+    l: toAlt("l"),
+
+    // aerospace shortcuts window related
+    // w for aerospace usually used to create window
+    w: {
+      comma: toAlt("comma"),
+      slash: toAlt("slash"),
+      return_or_enter: toAlt("return_or_enter"),
+      spacebar: toAlt("spacebar"),
+    },
+    // s is very convenient homerow
+    // use it for something very frequent when writing code or text
+    s: {
+      a: toKeyCode("a", true),
+      i: toKeyCode("i", true),
+      d: toCtrl("d"),
+      u: toCtrl("u"),
+      // for things that use colon as modifier / command keys
+      semicolon: toKeyCode("semicolon", true),
+      // delete keys with backslash
+      backslash: toKeyCode("delete_or_backspace"),
+    },
+    // aerospace workspace with shift included
+    d: {
+      hyphen: toAlt("hyphen", true),
+      equal_sign: toAlt("equal_sign", true),
+      semicolon: toAlt("semicolon", true),
+      h: toAlt("h", true),
+      j: toAlt("j", true),
+      k: toAlt("k", true),
+      l: toAlt("l", true),
+      spacebar: toAlt("spacebar", true),
+    },
+    // aersospace workspace
+    semicolon: {
+      quote: toAlt("tab"),
+      q: toAlt("q"),
+      w: toAlt("w"),
+      e: toAlt("e"),
+      r: toAlt("r"),
+      a: toAlt("a"),
+      s: toAlt("s"),
+      d: toAlt("d"),
+      g: toAlt("g"),
+      f: toAlt("f"),
+      z: toAlt("z"),
+      x: toAlt("x"),
+      c: toAlt("c"),
+      v: toAlt("v"),
+      m: toAlt("m"),
+      l: toAlt("l"),
+      k: toAlt("k"),
+      i: toAlt("i"),
+      o: toAlt("o"),
+      p: toAlt("p"),
+    },
+    // aerospace move to workspace
+    comma: {
+      q: toAlt("q", true),
+      w: toAlt("w", true),
+      e: toAlt("e", true),
+      r: toAlt("r", true),
+      a: toAlt("a", true),
+      s: toAlt("s", true),
+      d: toAlt("d", true),
+      g: toAlt("g", true),
+      f: toAlt("f", true),
+      z: toAlt("z", true),
+      x: toAlt("x", true),
+      c: toAlt("c", true),
+      v: toAlt("v", true),
+      m: toAlt("m", true),
+      l: toAlt("l", true),
+      k: toAlt("k", true),
+      i: toAlt("i", true),
+      o: toAlt("o", true),
+      p: toAlt("p", true),
+    },
     // open
     o: {
-      c: app("Google Chrome"),
+      c: open("raycast://extensions/Codely/google-chrome/new-window"),
       l: app("Calendar"),
+      g: app("ChatGPT"),
       f: app("Figma"),
-      t: app("iTerm"),
+      t: open("raycast://extensions/ron-myers/iterm/new-iterm-window"),
       b: app("Obsidian"),
-      spacebar: open(
-        "raycast://extensions/KevinBatdorf/obsidian/dailyNoteCommand"
-      ),
       // pomodoro
       p: app("Session"),
       s: app("Slack"),
       m: app("Mail"),
       v: app("Visual Studio Code"),
     },
-    w: {
-      // window management
-      l: rectangle("left-half"),
-      k: rectangle("first-two-thirds"),
-      e: rectangle("last-two-thirds"),
-      t: rectangle("last-third"),
-      r: rectangle("right-half"),
-      semicolon: rectangle("first-third"),
-      m: rectangle("maximize"),
-      c: rectangle("center"),
-    },
     r: {
       // raycast related
       h: open(
         "raycast://extensions/raycast/clipboard-history/clipboard-history"
       ),
+      t: open("raycast://extensions/raycast/translator/translate"),
       s: open("raycast://extensions/raycast/snippets/search-snippets"),
       a: open("raycast://extensions/raycast/raycast-ai/ai-chat"),
-      spacebar: open("raycast://extensions/raycast/raycast/confetti"),
       c: open("raycast://extensions/raycast/calendar/my-schedule"),
-      j: open("raycast://extensions/raycast/jira/active-sprints"),
+      k: open("raycast://extensions/raycast/jira/active-sprints"),
+      j: open("raycast://extensions/raycast/jira/my-filters"),
       q: open("raycast://extensions/Codely/google-chrome/search-tab"),
+      p: open("raycast://extensions/raycast/github/my-pull-requests"),
+      open_bracket: open("raycast://extensions/raycast/github/notifications"),
     },
     // terminal related
-    t: {
-      w: open(
-        "raycast://extensions/louishuyng/tmux-sessioner/manage_tmux_windows"
-      ),
-      s: open("raycast://extensions/louishuyng/tmux-sessioner/index"),
-      c: open(
-        "raycast://extensions/louishuyng/tmux-sessioner/create_new_session"
-      ),
-    },
-    v: {
-      h: {
-        to: [{ key_code: "left_arrow" }],
-      },
-      j: {
-        to: [{ key_code: "down_arrow" }],
-      },
-      k: {
-        to: [{ key_code: "up_arrow" }],
-      },
-      l: {
-        to: [{ key_code: "right_arrow" }],
-      },
-    },
   }),
 
   // remap right shift to lctrl
@@ -263,6 +239,23 @@ const rules: KarabinerRules[] = [
     ],
   },
   {
+    description: "remap right control to right option",
+    manipulators: [
+      {
+        from: {
+          key_code: "right_control",
+        },
+        to: [
+          {
+            key_code: "right_option",
+          },
+        ],
+        type: "basic",
+      },
+    ],
+  },
+
+  {
     description: "remap right option to lctrl",
     manipulators: [
       {
@@ -271,7 +264,7 @@ const rules: KarabinerRules[] = [
         },
         to: [
           {
-            key_code: "left_control",
+            key_code: "right_option",
           },
         ],
         type: "basic",
@@ -289,24 +282,3 @@ fs.writeFileSync(
   "karabiner.json",
   JSON.stringify(currentProfileAndRule, null, 2)
 );
-//
-// fs.writeFileSync(
-//   "karabiner.json",
-//   JSON.stringify(
-//     merge(currentProfileAndRule, {
-//       global: {
-//         show_in_menu_bar: false,
-//       },
-//       profiles: [
-//         {
-//           name: "Default",
-//           complex_modifications: {
-//             rules,
-//           },
-//         },
-//       ],
-//     }),
-//     null,
-//     2
-//   )
-// );

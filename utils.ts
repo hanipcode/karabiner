@@ -380,3 +380,52 @@ export function rectangle(name: string): LayerCommand {
 export function app(name: string): LayerCommand {
   return open(`-a '${name}.app'`);
 }
+
+export function toCtrl(key: KeyCode): LayerCommand {
+  return {
+    to: [
+      {
+        key_code: key,
+        modifiers: ["left_control"],
+      },
+    ],
+  };
+}
+
+export function toAlt(key: KeyCode, withShift: boolean = false): LayerCommand {
+  const addedModifiers = withShift ? ["left_shift"] : [];
+  return {
+    to: [
+      {
+        key_code: key,
+        modifiers: ["left_option", ...addedModifiers],
+      },
+    ],
+  };
+}
+
+export function toCmd(key: KeyCode): LayerCommand {
+  return {
+    to: [
+      {
+        key_code: key,
+        modifiers: ["left_command"],
+      },
+    ],
+  };
+}
+
+export function toKeyCode(
+  key: KeyCode,
+  withShift: boolean = false
+): LayerCommand {
+  const addedModifiers = withShift ? ["left_shift"] : [];
+  return {
+    to: [
+      {
+        key_code: key,
+        modifiers: [...addedModifiers],
+      },
+    ],
+  };
+}

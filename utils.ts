@@ -44,6 +44,151 @@ export function resetTabOnKeys(keys: KeyCode[]): any {
  * e.g. Hyper + O ("Open") is the "open applications" layer, I can press
  * e.g. Hyper + O + G ("Google Chrome") to open Chrome
  */
+export function createKeySubLayer(
+  layer_key: KeyCode,
+  sublayer_key: KeyCode,
+  commands: HyperKeySublayer,
+  allSubLayerVariables: string[]
+): Manipulator[] {
+  const subLayerVariableName = generateSubLayerVariableName(
+    sublayer_key,
+    `${layer_key}_sublayer_`
+  );
+
+  return [
+    // When Hyper + sublayer_key is pressed, set the variable to 1; on key_up, set it to 0 again
+    {
+      description: `Toggle ${layer_key} sublayer ${sublayer_key}`,
+      type: "basic",
+      from: {
+        key_code: sublayer_key,
+        modifiers: {
+          optional: ["any"],
+        },
+      },
+      to_after_key_up: [
+        {
+          set_variable: {
+            name: subLayerVariableName,
+            // The default value of a variable is 0: https://karabiner-elements.pqrs.org/docs/json/complex-modifications-manipulator-definition/conditions/variable/
+            // That means by using 0 and 1 we can filter for "0" in the conditions below and it'll work on startup
+            value: 0,
+          },
+        },
+      ],
+      to: [
+        {
+          set_variable: {
+            name: subLayerVariableName,
+            value: 1,
+          },
+        },
+      ],
+      // This enables us to press other sublayer keys in the current sublayer
+      // (e.g. Hyper + O > M even though Hyper + M is also a sublayer)
+      // basically, only trigger a sublayer if no other sublayer is active
+      conditions: [
+        ...allSubLayerVariables
+          .filter(
+            (subLayerVariable) => subLayerVariable !== subLayerVariableName
+          )
+          .map((subLayerVariable) => ({
+            type: "variable_if" as const,
+            name: subLayerVariable,
+            value: 0,
+          })),
+        {
+          type: "variable_if",
+          name: layer_key,
+          value: 1,
+        },
+      ],
+    },
+    // Define the individual commands that are meant to trigger in the sublayer
+    ...(Object.keys(commands) as (keyof typeof commands)[]).map(
+      (command_key): Manipulator => ({
+        ...commands[command_key],
+        type: "basic" as const,
+        from: {
+          key_code: command_key,
+          modifiers: {
+            optional: ["any"],
+          },
+        },
+        // Only trigger this command if the variable is 1 (i.e., if Hyper + sublayer is held)
+        conditions: [
+          {
+            type: "variable_if",
+            name: subLayerVariableName,
+            value: 1,
+          },
+        ],
+      })
+    ),
+  ];
+}
+
+/**
+ * Create all hyper sublayers. This needs to be a single function, as well need to
+ * have all the hyper variable names in order to filter them and make sure only one
+ * activates at a time
+ */
+export function createKeySubLayers(
+  key_layer: KeyCode,
+  subLayers: {
+    [key_code in KeyCode]?: HyperKeySublayer | LayerCommand;
+  }
+): KarabinerRules[] {
+  const allSubLayerVariables = (
+    Object.keys(subLayers) as (keyof typeof subLayers)[]
+  ).map((sublayer_key) => generateSubLayerVariableName(sublayer_key));
+
+  return Object.entries(subLayers).map(([key, value]) =>
+    "to" in value
+      ? {
+          description: `${key_layer} + ${key}`,
+          manipulators: [
+            {
+              ...value,
+              type: "basic" as const,
+              from: {
+                key_code: key as KeyCode,
+                modifiers: {
+                  optional: ["any"],
+                },
+              },
+              conditions: [
+                {
+                  type: "variable_if",
+                  name: `${key_layer}_layer`,
+                  value: 1,
+                },
+                ...allSubLayerVariables.map((subLayerVariable) => ({
+                  type: "variable_if" as const,
+                  name: subLayerVariable,
+                  value: 0,
+                })),
+              ],
+            },
+          ],
+        }
+      : {
+          description: `${key_layer} sublayer "${key}"`,
+          manipulators: createKeySubLayer(
+            key_layer,
+            key as KeyCode,
+            value,
+            allSubLayerVariables
+          ),
+        }
+  );
+}
+
+/**
+ * Create a Hyper Key sublayer, where every command is prefixed with a key
+ * e.g. Hyper + O ("Open") is the "open applications" layer, I can press
+ * e.g. Hyper + O + G ("Google Chrome") to open Chrome
+ */
 export function createTabSubLayer(
   sublayer_key: KeyCode,
   commands: HyperKeySublayer,
@@ -170,7 +315,7 @@ export function createTabSubLayers(subLayers: {
         }
       : {
           description: `Tab Key sublayer "${key}"`,
-          manipulators: createHyperSubLayer(
+          manipulators: createTabSubLayer(
             key as KeyCode,
             value,
             allSubLayerVariables
@@ -381,12 +526,13 @@ export function app(name: string): LayerCommand {
   return open(`-a '${name}.app'`);
 }
 
-export function toCtrl(key: KeyCode): LayerCommand {
+export function toCtrl(key: KeyCode, withShift: boolean = false): LayerCommand {
+  const addedModifiers = withShift ? ["left_shift"] : [];
   return {
     to: [
       {
         key_code: key,
-        modifiers: ["left_control"],
+        modifiers: ["left_control", ...addedModifiers],
       },
     ],
   };
@@ -404,12 +550,35 @@ export function toAlt(key: KeyCode, withShift: boolean = false): LayerCommand {
   };
 }
 
-export function toCmd(key: KeyCode): LayerCommand {
+export function toShift(
+  key: KeyCode,
+  withShift: boolean = false
+): LayerCommand {
+  const addedModifiers = withShift ? ["left_shift"] : [];
   return {
     to: [
       {
         key_code: key,
-        modifiers: ["left_command"],
+        modifiers: ["left_shift", ...addedModifiers],
+      },
+    ],
+  };
+}
+
+export function toCmd(
+  key: KeyCode,
+  withShift: boolean = false,
+  withAlt: boolean = false
+): LayerCommand {
+  const addedModifiers = withShift ? ["left_shift"] : [];
+  if (withAlt) {
+    addedModifiers.push("left_option");
+  }
+  return {
+    to: [
+      {
+        key_code: key,
+        modifiers: ["left_command", ...addedModifiers],
       },
     ],
   };

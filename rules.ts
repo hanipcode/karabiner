@@ -1,16 +1,42 @@
 import fs from "fs";
-import { KarabinerRules } from "./types";
+import { KarabinerRules, To } from "./types";
 import {
   createHyperSubLayers,
-  app,
   open,
   createTabSubLayers,
   toCtrl,
   toAlt,
   toKeyCode,
+  toCmd,
+  createKeySubLayers,
 } from "./utils";
 
 const rules: KarabinerRules[] = [
+  {
+    description: "tilde remapping",
+    manipulators: [
+      {
+        description: "tilde remapping",
+        from: {
+          key_code: "grave_accent_and_tilde",
+          modifiers: {
+            optional: ["any"],
+          },
+        },
+        to: [
+          {
+            key_code: "left_control",
+          },
+        ],
+        to_if_alone: [
+          {
+            key_code: "grave_accent_and_tilde",
+          },
+        ],
+        type: "basic",
+      },
+    ],
+  },
   {
     description: "Tab Layering",
     manipulators: [
@@ -47,22 +73,70 @@ const rules: KarabinerRules[] = [
       },
     ],
   },
+  {
+    description: "Hyper Key (⌃⌥⇧⌘)",
+    manipulators: [
+      {
+        description: "Caps Lock -> Hyper Key",
+        from: {
+          key_code: "left_shift",
+          modifiers: {
+            optional: ["any"],
+          },
+        },
+        to: [
+          {
+            key_code: "left_shift",
+          },
+        ],
+        to_if_alone: [
+          {
+            key_code: "escape",
+          },
+        ],
+        type: "basic",
+      },
+    ],
+  },
 
+  {
+    description: "Hyper Key (⌃⌥⇧⌘)",
+    manipulators: [
+      {
+        description: "Caps Lock -> Hyper Key",
+        from: {
+          key_code: "left_alt",
+          modifiers: {
+            optional: ["any"],
+          },
+        },
+        to: [
+          {
+            key_code: "left_alt",
+          },
+        ],
+        to_if_alone: [
+          {
+            key_code: "spacebar",
+          },
+        ],
+        type: "basic",
+      },
+    ],
+  },
+  ...createKeySubLayers("grave_accent_and_tilde", {
+    h: toCtrl("h"),
+    j: toCtrl("j"),
+    k: toCtrl("k"),
+    l: toCtrl("l"),
+  }),
   ...createTabSubLayers({
-    // use tab as helper for common shift + [0-9] keys
     // very useful to reduce strain pressing shift with htose keys
-    "1": toKeyCode("1", true),
-    "2": toKeyCode("2", true),
-    "3": toKeyCode("3", true),
-    "4": toKeyCode("4", true),
-    "5": toKeyCode("5", true),
-    // use tab as arrow
     h: toKeyCode("left_arrow"),
     j: toKeyCode("down_arrow"),
     k: toKeyCode("up_arrow"),
     l: toKeyCode("right_arrow"),
   }),
-
   // Define the Hyper key itself
   {
     description: "Hyper Key (⌃⌥⇧⌘)",
@@ -103,110 +177,99 @@ const rules: KarabinerRules[] = [
   ...createHyperSubLayers({
     // tmux change mode, so important
     a: toCtrl("a"),
-    // convenience right hand
-    p: {
-      w: toAlt("period", true),
-    },
-    // aerospace move focus
-    h: toAlt("h"),
-    j: toAlt("j"),
-    k: toAlt("k"),
-    l: toAlt("l"),
+    // home row
+    j: toCmd("j", true),
+    k: toCmd("k", true),
 
-    // aerospace shortcuts window related
-    // w for aerospace usually used to create window
-    w: {
-      comma: toAlt("comma"),
-      slash: toAlt("slash"),
-      return_or_enter: toAlt("return_or_enter"),
-      spacebar: toAlt("spacebar"),
-    },
-    // s is very convenient homerow
-    // use it for something very frequent when writing code or text
-    s: {
-      a: toKeyCode("a", true),
-      i: toKeyCode("i", true),
-      d: toCtrl("d"),
-      u: toCtrl("u"),
-      // for things that use colon as modifier / command keys
-      semicolon: toKeyCode("semicolon", true),
-      // delete keys with backslash
-      backslash: toKeyCode("delete_or_backspace"),
-    },
-    // aerospace workspace with shift included
-    d: {
-      hyphen: toAlt("hyphen", true),
-      equal_sign: toAlt("equal_sign", true),
-      semicolon: toAlt("semicolon", true),
-      h: toAlt("h", true),
-      j: toAlt("j", true),
-      k: toAlt("k", true),
-      l: toAlt("l", true),
-      spacebar: toAlt("spacebar", true),
-    },
-    // aersospace workspace
+    // mpst opened aerospace workspace
+    s: toAlt("s"),
+    d: toAlt("d"),
+    g: toAlt("g"),
+    m: toAlt("m"),
+    q: toAlt("q"),
+    w: toAlt("w"),
+    e: toAlt("e"),
+    z: toAlt("z"),
+    x: toAlt("x"),
+    c: toCtrl("c"),
+
+    // aerospace helper
+    open_bracket: toAlt("open_bracket"),
+    close_bracket: toAlt("close_bracket"),
+    backslash: toAlt("backslash"),
+    return_or_enter: toAlt("return_or_enter"),
+
+    // most used vim shortcut
+    // abort in lsp
+    o: toCtrl("o"),
+    i: toCtrl("i"),
+
     semicolon: {
       quote: toAlt("tab"),
       q: toAlt("q"),
       w: toAlt("w"),
       e: toAlt("e"),
       r: toAlt("r"),
+      t: toAlt("t"),
+      y: toAlt("y"),
+      u: toAlt("u"),
+      i: toAlt("i"),
+      o: toAlt("o"),
+      p: toAlt("p"),
       a: toAlt("a"),
       s: toAlt("s"),
       d: toAlt("d"),
-      g: toAlt("g"),
       f: toAlt("f"),
+      g: toAlt("g"),
+      h: toAlt("h"),
+      j: toAlt("j"),
+      k: toAlt("k"),
+      l: toAlt("l"),
       z: toAlt("z"),
       x: toAlt("x"),
       c: toAlt("c"),
       v: toAlt("v"),
+      b: toAlt("b"),
+      n: toAlt("n"),
       m: toAlt("m"),
-      l: toAlt("l"),
-      k: toAlt("k"),
-      i: toAlt("i"),
-      o: toAlt("o"),
-      p: toAlt("p"),
     },
     // aerospace move to workspace
     comma: {
+      quote: toAlt("tab", true),
       q: toAlt("q", true),
       w: toAlt("w", true),
       e: toAlt("e", true),
       r: toAlt("r", true),
+      t: toAlt("t", true),
+      y: toAlt("y", true),
+      u: toAlt("u", true),
+      i: toAlt("i", true),
+      o: toAlt("o", true),
+      p: toAlt("p", true),
       a: toAlt("a", true),
       s: toAlt("s", true),
       d: toAlt("d", true),
-      g: toAlt("g", true),
       f: toAlt("f", true),
+      g: toAlt("g", true),
+      h: toAlt("h", true),
+      j: toAlt("j", true),
+      k: toAlt("k", true),
+      l: toAlt("l", true),
       z: toAlt("z", true),
       x: toAlt("x", true),
       c: toAlt("c", true),
       v: toAlt("v", true),
+      b: toAlt("b", true),
+      n: toAlt("n", true),
       m: toAlt("m", true),
-      l: toAlt("l", true),
-      k: toAlt("k", true),
-      i: toAlt("i", true),
-      o: toAlt("o", true),
-      p: toAlt("p", true),
-    },
-    // open
-    o: {
-      c: open("raycast://extensions/Codely/google-chrome/new-window"),
-      l: app("Calendar"),
-      g: app("ChatGPT"),
-      f: app("Figma"),
-      t: open("raycast://extensions/ron-myers/iterm/new-iterm-window"),
-      b: app("Obsidian"),
-      // pomodoro
-      p: app("Session"),
-      s: app("Slack"),
-      m: app("Mail"),
-      v: app("Visual Studio Code"),
     },
     r: {
       // raycast related
       h: open(
         "raycast://extensions/raycast/clipboard-history/clipboard-history"
+      ),
+      e: open(
+        "raycast://extensions/raycast/emoji-symbols/search-emoji-symbols"
       ),
       t: open("raycast://extensions/raycast/translator/translate"),
       s: open("raycast://extensions/raycast/snippets/search-snippets"),
@@ -221,9 +284,9 @@ const rules: KarabinerRules[] = [
     // terminal related
   }),
 
-  // remap right shift to lctrl
+  // remap right del to lctrl
   {
-    description: "remap right shift to lctrl",
+    description: "remap right_shift  to lctrl",
     manipulators: [
       {
         from: {
@@ -232,39 +295,6 @@ const rules: KarabinerRules[] = [
         to: [
           {
             key_code: "left_control",
-          },
-        ],
-        type: "basic",
-      },
-    ],
-  },
-  {
-    description: "remap right control to right option",
-    manipulators: [
-      {
-        from: {
-          key_code: "right_control",
-        },
-        to: [
-          {
-            key_code: "right_option",
-          },
-        ],
-        type: "basic",
-      },
-    ],
-  },
-
-  {
-    description: "remap right option to lctrl",
-    manipulators: [
-      {
-        from: {
-          key_code: "right_command",
-        },
-        to: [
-          {
-            key_code: "right_option",
           },
         ],
         type: "basic",
